@@ -46,10 +46,6 @@ func NewConsumer(amqpURI string, exchange string, queueName string, key string, 
 		return nil, fmt.Errorf("Failed: %s", err)
 	}
 
-	go func() {
-		Log.Printf("Closing: %s", <-c.conn.NotifyClose(make(chan *amqp.Error)))
-	}()
-
 	Log.Printf("got Connection, getting Channel")
 	c.channel, err = c.conn.Channel()
 	if err != nil {
@@ -87,13 +83,6 @@ func NewConsumer(amqpURI string, exchange string, queueName string, key string, 
 
 // run forever
 func handle(deliveries <-chan amqp.Delivery, done chan error) {
-	cleanup := func() {
-		Log.Printf("handle: deliveries channel closed")
-		done <- nil
-	}
-
-	defer cleanup()
-
 	for d := range deliveries {
 		Log.Printf(
 			"got %dB delivery: [%v] %q",
